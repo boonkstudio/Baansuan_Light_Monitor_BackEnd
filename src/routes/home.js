@@ -22,8 +22,8 @@ router.get('/api/sync/all', async (req, res) => {
   sheet.setRange('data!A2:B');
   const data = await sheet.get();
   const createZones = await Promise.all(data.map(async (item) => {
-    const zone  = await Zone.findOneAndUpdate({ name: item[0], }, { $set: { name: item[0] } }, { new: true, upsert: true });
-    await Promise.all(Array.from({ length: item[1] }).map(async (value, i, array) => {
+    const zone  = await Zone.findOneAndUpdate({ sequence:item[0],name: item[1], }, { $set: { sequence:item[0],name: item[1] } }, { new: true, upsert: true });
+    await Promise.all(Array.from({ length: item[2] }).map(async (value, i, array) => {
       const data = {
         zone_id: zone._id,
         name: `${zone.name}-${(i + 1).toString().padStart(3, '0')}`,
