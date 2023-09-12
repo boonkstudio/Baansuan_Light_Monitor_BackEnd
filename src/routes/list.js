@@ -9,7 +9,7 @@ const Files = require('../models/Files');
 const router = express.Router();
 router.get('/api/list/zones', async (req, res) => {
   try {
-    const data = await Zones.find({}).sort({ name: 1 });
+    const data = await Zones.find({}).sort({ sequence: 1 });
     res.json({
       success: true,
       message: 'bansuan-light-monitor',
@@ -27,7 +27,7 @@ router.get('/api/list/lamp/:zone_id', async (req, res) => {
   try {
     const { zone_id } = req.params;
     const main = await Zones.findOne({ _id: zone_id });
-    const data = await Lamps.find({ zone_id }).sort({ name: 1 });
+    const data = await Lamps.find({ zone_id }).sort({ sequence: 1 });
     res.json({
       success: true,
       message: 'bansuan-light-monitor',
