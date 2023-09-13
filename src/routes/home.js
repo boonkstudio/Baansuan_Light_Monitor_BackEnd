@@ -43,7 +43,7 @@ router.get('/api/sync/all', async (req, res) => {
         const folder = await GoogleController.createFolder(zone.name, process.env.GOOGLE_FOLDER_ROOT_ID);
         const _zone = await Zone.findOneAndUpdate({ _id: zone._id }, { $set: { folder_id: folder._id } },{ new: true, upsert: true });
       } catch (err) {
-        console.debug(`err => `, err);
+        console.error(`err => `, err);
         // TODO(developer) - Handle error
       }
     }
