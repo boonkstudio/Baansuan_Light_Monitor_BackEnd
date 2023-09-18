@@ -2,5 +2,6 @@
 .DS_Store
 /.env
 /package-lock.json
+/public/documents/*
 
 node_modules/

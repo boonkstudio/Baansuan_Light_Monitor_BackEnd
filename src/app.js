@@ -39,11 +39,16 @@ app.use(express.static(`${__dirname}/public`, { maxAge: 31557600 }));
 app.use(morgan(':remote-addr :method :url :status :response-time :referrer :remote-user :user-agent', { stream: morgan.stream }));
 
 // ------------------ VIEW ------------------
+
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static("public"));
+app.use(express.static("public/documents"));
+app.use(express.static("public/images"));
+
 // ----------------- ROUTER & MIDDLEWARE -----------------
 
 app.use(cors());
