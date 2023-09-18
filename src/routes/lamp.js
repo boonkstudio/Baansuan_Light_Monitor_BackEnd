@@ -208,7 +208,7 @@ router.get('/api/lamp-exp', async (req, res) => {
             item?.files_after[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/"+item?.files_after[0]?.node_id+".jpg": '',
         ];
     }));
-      // await sheet.update(_data);
+      await sheet.update(_data);
     res.json(_data);
   });
     // const data = await sheet.update([
