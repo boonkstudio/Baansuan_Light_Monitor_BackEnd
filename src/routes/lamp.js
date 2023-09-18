@@ -31,4 +31,20 @@ router.post('/api/lamp/update-la-long/:_id', async (req, res) => {
     });
   }
 });
+router.post('/api/lamp/update-equipment-pole/:_id', async (req, res) => {
+  try {
+    const { _id } = req.params;
+    const {body} = req;
+    await Lamps.findOneAndUpdate({ _id }, body);
+    res.json({
+      success: true,
+      message: 'bansuan-light-monitor',
+    });
+  }catch (e) {
+    res.status(500).json({
+      success: false,
+      message: 'bansuan-light-monitor',
+    });
+  }
+});
 module.exports = router;

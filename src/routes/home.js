@@ -19,7 +19,7 @@ router.get('/', (req, res) => {
 
 router.get('/api/sync/all', async (req, res) => {
   const sheet = new GoogleSheetController('1KrGMSFsUPFF-xw5BfXyNnS8NydpHLyfKw2TC_C8c950');
-  sheet.setRange('data!A2:B');
+  sheet.setRange('data!A2:C');
   const data = await sheet.get();
   const createZones = await Promise.all(data.map(async (item) => {
     const zone  = await Zone.findOneAndUpdate({ sequence:item[0],name: item[1], }, { $set: { sequence:item[0],name: item[1] } }, { new: true, upsert: true });

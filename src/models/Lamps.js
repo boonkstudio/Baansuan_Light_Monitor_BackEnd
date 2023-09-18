@@ -8,7 +8,9 @@ const Lamps = mongoose.model('lamp', new Schema({
   folder_id: { type: Schema.Types.ObjectId, ref: 'folders' },
   sequence: { type: Number, default: null },
   latitude: { type: String, default: null },
-    longitude: { type: String, default: null },
+  longitude: { type: String, default: null },
+  equipment_number: { type: String, default: null },
+  pole_number: { type: String, default: null },
 }, {
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }, versionKey: false,
 }));
