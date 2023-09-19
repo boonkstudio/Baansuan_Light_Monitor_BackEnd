@@ -6,7 +6,7 @@ const https = require('https');
 const fs = require('fs');
 const _ = require("lodash");
 const {Drive} = require("../../config/google");
-
+const json2csv = require('json2csv').parse;
 const router = express.Router();
 
 router.get('/api/lamp/:_id', async (req, res) => {
@@ -208,12 +208,28 @@ router.get('/api/lamp-exp', async (req, res) => {
             item?.files_after[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/"+item?.files_after[0]?.node_id+".jpg": '',
         ];
     }));
+      const data_csv = await Promise.all(data.map((item) => {
+          return {
+                  zone:item?.zone?.name ?? '',
+                  name:item?.name ?? '',
+                  pole_number:item?.pole_number ?? '',
+                  equipment_number:item?.equipment_number ?? '',
+                  latitude:item?.latitude ?? '',
+                  longitude:item?.longitude ?? '',
+                  files_before:item?.files_before[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/" + item?.files_before[0]?.node_id + ".jpg" : '',
+                  files_during:item?.files_during[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/" + item?.files_during[0]?.node_id + ".jpg" : '',
+                  files_new_equipment:item?.files_new_equipment[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/" + item?.files_new_equipment[0]?.node_id + ".jpg" : '',
+                  files_old_equipment:item?.files_old_equipment[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/" + item?.files_old_equipment[0]?.node_id + ".jpg" : '',
+                  files_after:item?.files_after[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/" + item?.files_after[0]?.node_id + ".jpg" : '',
+          };
+      }));
+      const csvData = json2csv(data_csv);
+      fs.mkdirSync('public/documents', { recursive: true });
+      const csvFilePath = 'public/documents/report.csv';
+      fs.writeFileSync(csvFilePath, csvData);
       await sheet.update(_data);
     res.json(_data);
   });
-    // const data = await sheet.update([
-    //     ['1', '2', '3'],
-    // ]);
 });
 
 module.exports = router;
