@@ -47,6 +47,7 @@ app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static("public"));
 app.use(express.static("public/documents"));
+app.use(express.static("public/documents/resized"));
 app.use(express.static("public/images"));
 
 // ----------------- ROUTER & MIDDLEWARE -----------------

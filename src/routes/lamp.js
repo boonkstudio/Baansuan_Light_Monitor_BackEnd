@@ -255,11 +255,11 @@ router.get('/api/lamp-exp', async (req, res) => {
             item?.equipment_number??'',
             item?.latitude??'',
             item?.longitude??'',
-            item?.files_before[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/"+item?.files_before[0]?.node_id+".jpg": '',
-            item?.files_during[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/"+item?.files_during[0]?.node_id+".jpg": '',
-            item?.files_new_equipment[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/"+item?.files_new_equipment[0]?.node_id+".jpg": '',
-            item?.files_old_equipment[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/"+item?.files_old_equipment[0]?.node_id+".jpg": '',
-            item?.files_after[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/"+item?.files_after[0]?.node_id+".jpg": '',
+            item?.files_before[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_before[0]?.node_id+".jpg": '',
+            item?.files_during[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_during[0]?.node_id+".jpg": '',
+            item?.files_new_equipment[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_new_equipment[0]?.node_id+".jpg": '',
+            item?.files_old_equipment[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_old_equipment[0]?.node_id+".jpg": '',
+            item?.files_after[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_after[0]?.node_id+".jpg": '',
         ])
     }
       const data_csv = await Promise.all(data.map((item) => {
@@ -271,11 +271,11 @@ router.get('/api/lamp-exp', async (req, res) => {
                   equipment_number:item?.equipment_number ?? '',
                   latitude:item?.latitude ?? '',
                   longitude:item?.longitude ?? '',
-                  files_before:item?.files_before[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/" + item?.files_before[0]?.node_id + ".jpg" : '',
-                  files_during:item?.files_during[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/" + item?.files_during[0]?.node_id + ".jpg" : '',
-                  files_new_equipment:item?.files_new_equipment[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/" + item?.files_new_equipment[0]?.node_id + ".jpg" : '',
-                  files_old_equipment:item?.files_old_equipment[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/" + item?.files_old_equipment[0]?.node_id + ".jpg" : '',
-                  files_after:item?.files_after[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/" + item?.files_after[0]?.node_id + ".jpg" : '',
+                  files_before:item?.files_before[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/" + item?.files_before[0]?.node_id + ".jpg" : '',
+                  files_during:item?.files_during[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/" + item?.files_during[0]?.node_id + ".jpg" : '',
+                  files_new_equipment:item?.files_new_equipment[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/" + item?.files_new_equipment[0]?.node_id + ".jpg" : '',
+                  files_old_equipment:item?.files_old_equipment[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/" + item?.files_old_equipment[0]?.node_id + ".jpg" : '',
+                  files_after:item?.files_after[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/" + item?.files_after[0]?.node_id + ".jpg" : '',
           };
       }));
       for (const [k,v] of Object.entries(_.groupBy(data_csv,'_zone'))) {
@@ -284,8 +284,7 @@ router.get('/api/lamp-exp', async (req, res) => {
           const csvFilePath = `public/documents/${k}.csv`;
           fs.writeFileSync(csvFilePath, csvData);
       }
-
-      // await sheet.update(_data);
+      await sheet.update(_data);
     res.json(_.groupBy(data_csv,'_zone'));
   });
 });
