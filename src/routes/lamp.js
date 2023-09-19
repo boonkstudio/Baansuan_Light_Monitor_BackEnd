@@ -98,7 +98,7 @@ await new Promise((resolve, reject) => {
                             resolve();
                         }).on('error', (err) => {
                             console.error(err);
-                            reject(err);
+                            resolve();
                         });
                     });
                     const inputFilePath = imageName;
@@ -110,7 +110,7 @@ await new Promise((resolve, reject) => {
                             .toFile(outputFilePath, (err, info) => {
                                 if (err) {
                                     console.error(err);
-                                    reject(err);
+                                    resolve(err);
                                 } else {
                                     console.log('Image resized successfully:', info);
                                     resolve();
@@ -278,10 +278,7 @@ router.get('/api/lamp-exp', async (req, res) => {
                   files_after:item?.files_after[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/" + item?.files_after[0]?.node_id + ".jpg" : '',
           };
       }));
-      // console.debug(`data_csv => `, _.groupBy(data_csv,'_zone'));
       for (const [k,v] of Object.entries(_.groupBy(data_csv,'_zone'))) {
-          // console.debug(`k => `, k);
-          // console.debug(`v => `, v);
           const csvData = json2csv(v);
           fs.mkdirSync('public/documents', { recursive: true });
           const csvFilePath = `public/documents/${k}.csv`;
