@@ -6,6 +6,8 @@ const https = require('https');
 const fs = require('fs');
 const _ = require("lodash");
 const {Drive} = require("../../config/google");
+const sharp = require("sharp");
+const {read} = require("jimp");
 const json2csv = require('json2csv').parse;
 const router = express.Router();
 
@@ -60,17 +62,41 @@ const saveFile = async ( node) => {
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
     }
+    const dir2 = 'public/documents/resized';
+    if (!fs.existsSync(dir2)) {
+        fs.mkdirSync(dir2);
+    }
+
     fs.readFile(imageName, async (err, data) => {
         try {
             if (err) {
-                await Drive.files.get({ fileId, alt: 'media' }, { responseType: 'stream' }, (err, resp) => {
+                await Drive.files.get({ fileId, alt: 'media' }, { responseType: 'stream',size:1 }, (err, resp) => {
                     if (_.result(resp, 'data', false)) {
                         const dest = fs.createWriteStream(imageName);
                         resp.data.pipe(dest);
                         console.log(`Image downloaded as ${imageName}`);
+
                     }
                 });
             }
+            const inputFilePath = imageName;
+            const outputFilePath = `${dir2}/${fileId}.jpg`;
+            const newWidth = 500;
+            const newHeight = 500;
+            sharp(inputFilePath).rotate()
+                .webp({ quality: 80 })
+                .resize(500)
+                // .resize(newWidth, newHeight,{
+                //     fit:"contain",
+                //     background: { r: 255, g: 255, b: 255, alpha: 1 }
+                // })
+                .toFile(outputFilePath, (err, info) => {
+                    if (err) {
+                        console.error(err);
+                    } else {
+                        console.log('Image resized successfully:', info);
+                    }
+                });
         } catch (e) {
             console.error(e);
         }
@@ -201,11 +227,11 @@ router.get('/api/lamp-exp', async (req, res) => {
             item?.equipment_number??'',
             item?.latitude??'',
             item?.longitude??'',
-            item?.files_before[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/"+item?.files_before[0]?.node_id+".jpg": '',
-            item?.files_during[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/"+item?.files_during[0]?.node_id+".jpg": '',
-            item?.files_new_equipment[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/"+item?.files_new_equipment[0]?.node_id+".jpg": '',
-            item?.files_old_equipment[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/"+item?.files_old_equipment[0]?.node_id+".jpg": '',
-            item?.files_after[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/"+item?.files_after[0]?.node_id+".jpg": '',
+            item?.files_before[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_before[0]?.node_id+".jpg": '',
+            item?.files_during[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_during[0]?.node_id+".jpg": '',
+            item?.files_new_equipment[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_new_equipment[0]?.node_id+".jpg": '',
+            item?.files_old_equipment[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_old_equipment[0]?.node_id+".jpg": '',
+            item?.files_after[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_after[0]?.node_id+".jpg": '',
         ];
     }));
       const data_csv = await Promise.all(data.map((item) => {
@@ -216,11 +242,11 @@ router.get('/api/lamp-exp', async (req, res) => {
                   equipment_number:item?.equipment_number ?? '',
                   latitude:item?.latitude ?? '',
                   longitude:item?.longitude ?? '',
-                  files_before:item?.files_before[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/" + item?.files_before[0]?.node_id + ".jpg" : '',
-                  files_during:item?.files_during[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/" + item?.files_during[0]?.node_id + ".jpg" : '',
-                  files_new_equipment:item?.files_new_equipment[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/" + item?.files_new_equipment[0]?.node_id + ".jpg" : '',
-                  files_old_equipment:item?.files_old_equipment[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/" + item?.files_old_equipment[0]?.node_id + ".jpg" : '',
-                  files_after:item?.files_after[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/" + item?.files_after[0]?.node_id + ".jpg" : '',
+                  files_before:item?.files_before[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/" + item?.files_before[0]?.node_id + ".jpg" : '',
+                  files_during:item?.files_during[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/" + item?.files_during[0]?.node_id + ".jpg" : '',
+                  files_new_equipment:item?.files_new_equipment[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/" + item?.files_new_equipment[0]?.node_id + ".jpg" : '',
+                  files_old_equipment:item?.files_old_equipment[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/" + item?.files_old_equipment[0]?.node_id + ".jpg" : '',
+                  files_after:item?.files_after[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/" + item?.files_after[0]?.node_id + ".jpg" : '',
           };
       }));
       const csvData = json2csv(data_csv);
