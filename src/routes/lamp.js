@@ -11,6 +11,7 @@ const {read} = require("jimp");
 const json2csv = require('json2csv').parse;
 const router = express.Router();
 const { promisify } = require('util');
+const {Schema} = require("mongoose");
 
 router.get('/api/lamp/:_id', async (req, res) => {
   const { _id } = req.params;
@@ -56,7 +57,7 @@ router.post('/api/lamp/update-equipment-pole/:_id', async (req, res) => {
   }
 });
 
-const saveFile = async ( node) => {
+const saveFile = async ( node,index) => {
     const fileId = node;
     const imageName = "public/documents/"+fileId+'.jpg';
     const dir = 'public/documents';
@@ -100,7 +101,6 @@ const saveFile = async ( node) => {
                                 }
                             });
                     });
-                    console.debug(` ================= `, );
                 }
             }
             const inputFilePath = imageName;
@@ -122,7 +122,6 @@ const saveFile = async ( node) => {
                                     }
                                 });
                         });
-                        console.debug(` ================= `, );
                     }
                     resolve();
                 } catch (e) {
@@ -144,7 +143,6 @@ try {
     const img = fs.readFileSync(`public/documents/resized/${filePath}.webp`);
     if (img){
         const b64 =  new Buffer(img).toString('base64');
-        console.debug(`filePath => `, filePath);
         return b64
     }
     return "";
@@ -153,110 +151,19 @@ try {
     return '';
 }
 }
-router.get('/api/lamp-exp', async (req, res) => {
-  const sheet = new GoogleSheetController('1XTXmV79dATRV3esViGFSaCxCRtK5OBZmayiF2iwxD18');
-  sheet.setRange('data!A2:Z');
-  Lamps.aggregate([
-    {
-      $lookup:
-          {
-            from: "zones",
-            localField: "zone_id",
-            foreignField: "_id",
-            as: "zone",
-          },
-    },
-    {
-      $unwind:
-          {
-            path: "$zone",
-            preserveNullAndEmptyArrays: true,
-          },
-    },
-      // [ "ก่อนติดตั้ง", "ระหว่างติดตั้ง", "รูปภาพเลขครุภัณฑ์โคมไฟใหม", "รูปภาพเลขครุภัณฑ์โคมไฟใหม", "หลังติดตั้ง" ]
-    {
-      $lookup:
-          {
-            from: "files",
-            localField: "_id",
-            foreignField: "lamp_id",
-            as: "files_before",
-            pipeline: [
-              {
-                $match: {
-                    type: "ก่อนติดตั้ง",
-                }
-              }
-            ],
-          },
-    },
-    {
-      $lookup:
-          {
-            from: "files",
-            localField: "_id",
-            foreignField: "lamp_id",
-            as: "files_during",
-            pipeline: [
-              {
-                $match: {
-                  type: "ระหว่างติดตั้ง",
-                }
-              }
-            ],
-          },
-    },
-    {
-      $lookup:
-          {
-            from: "files",
-            localField: "_id",
-            foreignField: "lamp_id",
-            as: "files_new_equipment",
-            pipeline: [
-              {
-                $match: {
-                  type: "รูปภาพเลขครุภัณฑ์โคมไฟใหม",
-                }
-              }
-            ],
-          },
-    },
-      {
-      $lookup:
-          {
-            from: "files",
-            localField: "_id",
-            foreignField: "lamp_id",
-            as: "files_old_equipment",
-            pipeline: [
-              {
-                $match: {
-                  type: "รูปภาพเลขครุภัณฑ์โคมไฟเดิม",
-                }
-              }
-            ],
-          },
-    },
-    {
-      $lookup:
-          {
-            from: "files",
-            localField: "_id",
-            foreignField: "lamp_id",
-            as: "files_after",
-            pipeline: [
-              {
-                $match: {
-                  type: "หลังติดตั้ง",
-                }
-              }
-            ],
-          },
-    },
-  ]).then(async (data) => {
-    let _data = [];
-    for (const [k,item] of Object.entries(data)) {
+router.get('/api/lamp-exp/:_id', async (req, res) => {
+    const { _id } = req.params;
+    const lamp = await Lamps.findOne({ _id }).populate('zone_id').exec();
+    const files = await Files.find({ lamp_id: _id });
+    const item = {
+        ...lamp.toObject(),
+        files_before:_.orderBy(files.filter((item)=>item.type==='ก่อนติดตั้ง'),'created_at','desc'),
+        files_during:_.orderBy(files.filter((item)=>item.type==='ระหว่างติดตั้ง'),'created_at','desc'),
+        files_after:_.orderBy(files.filter((item)=>item.type==='หลังติดตั้ง'),'created_at','desc'),
+        files_new_equipment:_.orderBy(files.filter((item)=>item.type==='รูปภาพเลขครุภัณฑ์โคมไฟใหม'),'created_at','desc'),
+        files_old_equipment:_.orderBy(files.filter((item)=>item.type==='รูปภาพเลขครุภัณฑ์โคมไฟเดิม'),'created_at','desc'),
+    };
+    if(item){
         if (item?.files_before[0]?.node_id){
             await saveFile(item?.files_before[0]?.node_id);
         }
@@ -272,62 +179,25 @@ router.get('/api/lamp-exp', async (req, res) => {
         if (item?.files_during[0]?.node_id){
             await saveFile(item?.files_during[0]?.node_id);
         }
-        _data.push([
-            item?.zone?.name??'',
-            item?.name??'',
-            item?.pole_number??'',
-            item?.equipment_number??'',
-            item?.latitude??'',
-            item?.longitude??'',
-            item?.files_before[0]?.node_id ? `https://bansuan-api.ledonhome.co.th/documents/${item?.files_before[0]?.node}.jpg`: '',
-            item?.files_during[0]?.node_id ? `https://bansuan-api.ledonhome.co.th/documents/${item?.files_during[0]?.node}.jpg`: '',
-            item?.files_new_equipment[0]?.node_id ? `https://bansuan-api.ledonhome.co.th/documents/${item?.files_new_equipment[0]?.node}.jpg`: '',
-            item?.files_old_equipment[0]?.node_id ? `https://bansuan-api.ledonhome.co.th/documents/${item?.files_old_equipment[0]?.node}.jpg`: '',
-            item?.files_after[0]?.node_id ? `https://bansuan-api.ledonhome.co.th/documents/${item?.files_after[0]?.node}.jpg`: '',
-        ])
+        res.json({
+            zone:item?.zone?.name ?? '',
+            name:item?.name ?? '',
+            pole_number:item?.pole_number ?? '',
+            equipment_number:item?.equipment_number ?? '',
+            latitude:item?.latitude ?? '',
+            longitude:item?.longitude ?? '',
+            files_before:toBase64(item?.files_before[0]?.node_id ? item?.files_before[0]?.node_id:""),
+            files_during:toBase64(item?.files_during[0]?.node_id ? item?.files_during[0]?.node_id:""),
+            files_new_equipment:toBase64(item?.files_new_equipment[0]?.node_id ? item?.files_new_equipment[0]?.node_id:""),
+            files_old_equipment:toBase64(item?.files_old_equipment[0]?.node_id ? item?.files_old_equipment[0]?.node_id:""),
+            files_after:toBase64(item?.files_after[0]?.node_id ? item?.files_after[0]?.node_id:""),
+        });
+    }else{
+        res.json({
+            message: 'data not found',
+        });
     }
-      const data_csv = await Promise.all(data.map((item) => {
 
-          // if (item?.files_before[0]?.node_id){
-          //     await saveFile(item?.files_before[0]?.node_id);
-          // }
-          // if (item?.files_after[0]?.node_id){
-          //     await saveFile(item?.files_after[0]?.node_id);
-          // }
-          // if (item?.files_new_equipment[0]?.node_id){
-          //     await saveFile(item?.files_new_equipment[0]?.node_id);
-          // }
-          // if (item?.files_old_equipment[0]?.node_id){
-          //     await saveFile(item?.files_old_equipment[0]?.node_id);
-          // }
-          // if (item?.files_during[0]?.node_id){
-          //     await saveFile(item?.files_during[0]?.node_id);
-          // }
-
-          return {
-              _zone:item?.zone?._id ?? '',
-                  zone:item?.zone?.name ?? '',
-                  name:item?.name ?? '',
-                  pole_number:item?.pole_number ?? '',
-                  equipment_number:item?.equipment_number ?? '',
-                  latitude:item?.latitude ?? '',
-                  longitude:item?.longitude ?? '',
-                  files_before:item?.files_before[0]?.node_id ? `https://bansuan-api.ledonhome.co.th/documents/resized/${item?.files_before[0]?.node_id}.webp` : '',
-                  files_during:item?.files_during[0]?.node_id ? `https://bansuan-api.ledonhome.co.th/documents/resized/${item?.files_during[0]?.node_id}.webp` : '',
-                  files_new_equipment:item?.files_new_equipment[0]?.node_id ? `https://bansuan-api.ledonhome.co.th/documents/resized/${item?.files_new_equipment[0]?.node_id}.webp` : '',
-                  files_old_equipment:item?.files_old_equipment[0]?.node_id ? `https://bansuan-api.ledonhome.co.th/documents/resized/${item?.files_old_equipment[0]?.node_id}.webp` : '',
-                  files_after:item?.files_after[0]?.node_id ? `https://bansuan-api.ledonhome.co.th/documents/resized/${item?.files_after[0]?.node_id}.webp` : '',
-          };
-      }));
-      for (const [k,v] of Object.entries(_.groupBy(data_csv,'_zone'))) {
-          const csvData = json2csv(v);
-          fs.mkdirSync('public/documents', { recursive: true });
-          const csvFilePath = `public/documents/${k}.csv`;
-          fs.writeFileSync(csvFilePath, csvData);
-      }
-      await sheet.update(_data);
-    res.json(_.groupBy(data_csv,'_zone'));
-  });
 });
 
 module.exports = router;
