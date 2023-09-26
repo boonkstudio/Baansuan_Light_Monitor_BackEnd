@@ -144,4 +144,43 @@ router.post('/api/upload/file-one', async (req, res) => {
     });
   }
 });
+router.post('/api/upload/delete-file', async (req, res) => {
+  try {
+    const { body } = req;
+    Files.findOne(
+        {
+            _id: body._id,
+        }
+    ).then(async (file) => {
+      if (file) {
+        try {
+          const gDelete = await Drive.files.delete({
+            fileId: file.node_id,
+          });
+        }catch (e) {
+
+        }
+        await Files.findOneAndDelete({
+          _id: body._id,
+        })
+        res.json({
+          success: true,
+        });
+      } else {
+        res.json({
+          success: true,
+        });
+      }
+    }).catch((e) => {
+      res.json({
+        success: false,
+      });
+    });
+
+  }catch (e) {
+    res.status(500).json({
+      success: false,
+    });
+  }
+});
 module.exports = router;
