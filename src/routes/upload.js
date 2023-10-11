@@ -100,13 +100,14 @@ router.post('/api/upload/file-one', async (req, res) => {
     const mimeType = _.result(body, 'image.type', 'image/jpeg');
     const base64 = _.result(body, 'image.data_url', '');
     const name = `${_.result(lamp ?? zone, 'name', 'untitled')} รูปที่ ${lastSequence + 1} ${_.result(body, 'type', '')}`;
+    const saveName = `public/documents/${_.snakeCase(_.result(lamp ?? zone, 'name', 'untitled'))} รูปที่ ${lastSequence + 1} ${_.result(body, 'type', '')}.${mimeType.split('/')[1]}`;
     const fileName = `public/documents/${name}.${mimeType.split('/')[1]}`;
     const base64Image = base64.split(';base64,')
       .pop();
     if (!fs.existsSync('public/documents')) {
       fs.mkdirSync('public/documents');
     }
-    fs.writeFile(fileName, base64Image, { encoding: 'base64' }, (err) => {
+    fs.writeFile(saveName, base64Image, { encoding: 'base64' }, (err) => {
       if (err) {
         console.error(err);
       }else {
@@ -115,7 +116,7 @@ router.post('/api/upload/file-one', async (req, res) => {
     });
     //
     const _upload = await uploadFileToGoogle({
-      file: fs.createReadStream(fileName),
+      file: fs.createReadStream(saveName),
       fileName: fileName.split('/')[2],
       mimeType,
       parents: node_id,
@@ -130,7 +131,7 @@ router.post('/api/upload/file-one', async (req, res) => {
         type: _.result(body, 'type', ''),
       });
     }
-    fs.unlinkSync(fileName);
+    fs.unlinkSync(saveName);
     res.json({
       success: true,
       message: 'bansuan-light-monitor',
