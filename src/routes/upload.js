@@ -112,48 +112,32 @@ router.post('/api/upload/file-one', async (req, res) => {
       }else {
         console.log('success');
       }
-      fs.readFileSync(fileName, {},async (err, data) => {
-        if (err) {
-          console.error(err);
-          res.status(500).json({
-            success: false,
-            message: 'bansuan-light-monitor',
-            data: {
-              version: '1.0.0',
-            },
-          });
-        } else {
-          console.log('success');
-          //
-          const _upload = await uploadFileToGoogle({
-            file: fs.createReadStream(fileName),
-            fileName: fileName.split('/')[2],
-            mimeType,
-            parents: node_id,
-          });
-          if (_.result(_upload, 'file.id')) {
-            await Files.create({
-              name,
-              node_id: _.result(_upload, 'file.id'),
-              lamp_id,
-              sequence: lastSequence + 1,
-              created_by: email,
-              type: _.result(body, 'type', ''),
-            });
-          }
-          fs.unlinkSync(fileName);
-          res.json({
-            success: true,
-            message: 'bansuan-light-monitor',
-            data: {
-              version: '1.0.0',
-            },
-          });
-        }
-      });
-
     });
-
+    //
+    const _upload = await uploadFileToGoogle({
+      file: fs.createReadStream(fileName),
+      fileName: fileName.split('/')[2],
+      mimeType,
+      parents: node_id,
+    });
+    if (_.result(_upload, 'file.id')) {
+      await Files.create({
+        name,
+        node_id: _.result(_upload, 'file.id'),
+        lamp_id,
+        sequence: lastSequence + 1,
+        created_by: email,
+        type: _.result(body, 'type', ''),
+      });
+    }
+    fs.unlinkSync(fileName);
+    res.json({
+      success: true,
+      message: 'bansuan-light-monitor',
+      data: {
+        version: '1.0.0',
+      },
+    });
   } catch (e) {
     console.error(e);
     res.status(500).json({
