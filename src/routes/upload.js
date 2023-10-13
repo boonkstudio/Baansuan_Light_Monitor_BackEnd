@@ -10,6 +10,7 @@ const Files = require('../models/Files');
 const { Drive } = require('../../config/google');
 const Alleys = require('../models/Alleys');
 const Zones = require("../models/Zones");
+const {faker} = require("@faker-js/faker");
 
 const router = express.Router();
 
@@ -100,7 +101,7 @@ router.post('/api/upload/file-one', async (req, res) => {
     const mimeType = _.result(body, 'image.type', 'image/jpeg');
     const base64 = _.result(body, 'image.data_url', '');
     const name = `${_.result(lamp ?? zone, 'name', 'untitled')} รูปที่ ${lastSequence + 1} ${_.result(body, 'type', '')}`;
-    const saveName = `public/documents/${_.snakeCase(_.result(lamp ?? zone, 'name', 'untitled'))} รูปที่ ${lastSequence + 1} ${_.result(body, 'type', '')}.${mimeType.split('/')[1]}`;
+    const saveName = `public/documents/upload-${faker.datatype.uuid()}.${mimeType.split('/')[1]}`;
     const fileName = `public/documents/${name}.${mimeType.split('/')[1]}`;
     const base64Image = base64.split(';base64,')
       .pop();
