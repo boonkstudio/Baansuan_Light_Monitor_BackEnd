@@ -42,6 +42,22 @@ class GoogleController {
       return null;
     }
   };
+  renameFolder = async (node_id, name) => {
+    try {
+      const fileMetadata = {
+        name,
+      };
+      const file = await Drive.files.update({
+        fileId: node_id,
+        resource: fileMetadata,
+        fields: 'id',
+      });
+      return file.data;
+    } catch (err) {
+      console.error('renameFolder => ', err);
+      return null;
+    }
+  };
 
   uploadFile = async ({
     file, fileName, mimeType, folderId,

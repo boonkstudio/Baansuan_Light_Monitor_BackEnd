@@ -57,7 +57,7 @@ router.post('/api/lamp/update-equipment-pole/:_id', async (req, res) => {
   }
 });
 
-const saveFile = async ( node,index) => {
+const saveFile = async ( node,renew=false) => {
     const fileId = node;
     const imageName = "public/documents/"+fileId+'.jpg';
     const dir = 'public/documents';
@@ -68,9 +68,29 @@ const saveFile = async ( node,index) => {
     if (!fs.existsSync(dir2)) {
         fs.mkdirSync(dir2);
     }
+    if (renew){
+        try {
+            fs.unlinkSync(imageName, (err) => {
+                if (err) {
+                    console.error(err);
+                }
+            });
+        }catch (e) {
+
+        }
+        try {
+            fs.unlinkSync(`${dir2}/${fileId}.webp`, (err) => {
+                if (err) {
+                    console.error(err);
+                }
+            });
+        }catch (e) {
+
+        }
+    }
 
     await new Promise((resolve, reject) => {
-    fs.readFile(imageName, async (err, data) => {
+    fs.readFile(`${dir2}/${fileId}.webp`, async (err, data) => {
         try {
             if (err) {
                 const resp =  await Drive.files.get({ fileId, alt: 'media' }, { responseType: 'stream',size:1 })
@@ -98,37 +118,16 @@ const saveFile = async ( node,index) => {
                                 } else {
                                     console.log('Image resized successfully:', info);
                                     resolve();
+                                    fs.unlinkSync(imageName, (err) => {
+                                        if (err) {
+                                            console.error(err);
+                                        }
+                                    });
                                 }
                             });
                     });
                 }
             }
-            const inputFilePath = imageName;
-            const outputFilePath = `${dir2}/${fileId}.webp`;
-            fs.readFile(outputFilePath, async (err, data) => {
-                try {
-                    if (err) {
-                        await new Promise((resolve, reject)=>{
-                            sharp(inputFilePath).rotate()
-                                .webp({ quality: 80 })
-                                .resize(500)
-                                .toFile(outputFilePath, (err, info) => {
-                                    if (err) {
-                                        console.error(err);
-                                        resolve(err);
-                                    } else {
-                                        console.log('Image resized successfully:', info);
-                                        resolve();
-                                    }
-                                });
-                        });
-                    }
-                    resolve();
-                } catch (e) {
-                    console.error(e);
-                    reject(e);
-                }
-            });
             resolve();
         } catch (e) {
             console.error(e);
@@ -153,6 +152,8 @@ try {
 }
 router.get('/api/lamp-exp/:_id', async (req, res) => {
     const { _id } = req.params;
+    const renew = req.query.renew === 'true';
+    console.debug(`renew => `, renew);
     const lamp = await Lamps.findOne({ _id }).populate('zone_id').exec();
     const files = await Files.find({ lamp_id: _id });
     const item = {
@@ -165,19 +166,19 @@ router.get('/api/lamp-exp/:_id', async (req, res) => {
     };
     if(item){
         if (item?.files_before[0]?.node_id){
-            await saveFile(item?.files_before[0]?.node_id);
+            await saveFile(item?.files_before[0]?.node_id,renew);
         }
         if (item?.files_after[0]?.node_id){
-            await saveFile(item?.files_after[0]?.node_id);
+            await saveFile(item?.files_after[0]?.node_id,renew);
         }
         if (item?.files_new_equipment[0]?.node_id){
-            await saveFile(item?.files_new_equipment[0]?.node_id);
+            await saveFile(item?.files_new_equipment[0]?.node_id,renew);
         }
         if (item?.files_old_equipment[0]?.node_id){
-            await saveFile(item?.files_old_equipment[0]?.node_id);
+            await saveFile(item?.files_old_equipment[0]?.node_id,renew);
         }
         if (item?.files_during[0]?.node_id){
-            await saveFile(item?.files_during[0]?.node_id);
+            await saveFile(item?.files_during[0]?.node_id,renew);
         }
         res.json({
             zone:item?.zone?.name ?? '',

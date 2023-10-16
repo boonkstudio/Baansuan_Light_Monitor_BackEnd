@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { Schema } = require('mongoose');
 // โคม
-const Lamps = mongoose.model('lamp', new Schema({
+const Lamps = mongoose.model('lamps', new Schema({
   zone_id: { type: Schema.Types.ObjectId, ref: 'zones' },
   name: { type: String, default: null },
   uid: { type: String, default: null },
