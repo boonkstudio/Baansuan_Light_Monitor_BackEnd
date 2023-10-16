@@ -21,7 +21,7 @@ router.get('/', (req, res) => {
 
 router.get('/api/sync/all', async (req, res) => {
   const sheet = new GoogleSheetController('1KrGMSFsUPFF-xw5BfXyNnS8NydpHLyfKw2TC_C8c950');
-  sheet.setRange('data!A2:C');
+  sheet.setRange('data!A2:E');
   const data = await sheet.get();
   const createZones = await Promise.all(data.map(async (item) => {
     let zone = {};
