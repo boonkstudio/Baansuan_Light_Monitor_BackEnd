@@ -256,9 +256,9 @@ router.get('/api/zone-exp/:_id', async (req, res) => {
                 name:item?.name ?? '',
                 pole_number:item?.pole_number ?? '',
                 equipment_number:item?.equipment_number ?? '',
-                files_before:toBase64(item?.files_before[0]?.node_id ? item?.files_before[0]?.node_id:"")??"",
-                files_during:toBase64(item?.files_during[0]?.node_id ? item?.files_during[0]?.node_id:"")??"",
-                files_lights_on:toBase64(item?.files_lights_on[0]?.node_id ? item?.files_lights_on[0]?.node_id:"")??"",
+                files_before:item?.files_before[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_before[0]?.node_id+".webp":"",
+                files_during:item?.files_during[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_during[0]?.node_id+".webp":"",
+                files_lights_on:item?.files_lights_on[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_lights_on[0]?.node_id+".webp":"",
             })
             i++;
             console.debug(i+"/"+lamps.length);
