@@ -118,11 +118,16 @@ const saveFile = async ( node,renew=false) => {
                                 } else {
                                     console.log('Image resized successfully:', info);
                                     resolve();
-                                    fs.unlinkSync(imageName, (err) => {
-                                        if (err) {
-                                            console.error(err);
-                                        }
-                                    });
+                                    try {
+                                        fs.unlinkSync(imageName, (err) => {
+                                            if (err) {
+                                                console.error(err);
+                                            }
+                                        });
+                                    }catch (e) {
+
+                                    }
+
                                 }
                             });
                     });
@@ -163,6 +168,7 @@ router.get('/api/lamp-exp/:_id', async (req, res) => {
         files_after:_.orderBy(files.filter((item)=>item.type==='หลังติดตั้ง'),'created_at','desc'),
         files_new_equipment:_.orderBy(files.filter((item)=>item.type==='รูปภาพเลขครุภัณฑ์โคมไฟใหม'),'created_at','desc'),
         files_old_equipment:_.orderBy(files.filter((item)=>item.type==='รูปภาพเลขครุภัณฑ์โคมไฟเดิม'),'created_at','desc'),
+        files_lights_on:_.orderBy(files.filter((item)=>item.type==='ภาพถ่ายดำเนินการแล้วเสร็จ(ไฟติด)'),'created_at','desc'),
     };
     if(item){
         if (item?.files_before[0]?.node_id){
@@ -180,6 +186,9 @@ router.get('/api/lamp-exp/:_id', async (req, res) => {
         if (item?.files_during[0]?.node_id){
             await saveFile(item?.files_during[0]?.node_id,renew);
         }
+        if (item?.files_lights_on[0]?.node_id){
+            await saveFile(item?.files_lights_on[0]?.node_id,renew);
+        }
         res.json({
             zone:item?.zone?.name ?? '',
             name:item?.name ?? '',
@@ -192,11 +201,75 @@ router.get('/api/lamp-exp/:_id', async (req, res) => {
             files_new_equipment:toBase64(item?.files_new_equipment[0]?.node_id ? item?.files_new_equipment[0]?.node_id:""),
             files_old_equipment:toBase64(item?.files_old_equipment[0]?.node_id ? item?.files_old_equipment[0]?.node_id:""),
             files_after:toBase64(item?.files_after[0]?.node_id ? item?.files_after[0]?.node_id:""),
+            files_lights_on:toBase64(item?.files_lights_on[0]?.node_id ? item?.files_lights_on[0]?.node_id:""),
         });
     }else{
         res.json({
             message: 'data not found',
         });
+    }
+
+});
+
+const { ObjectId } = require('mongodb');
+const Zones = require("../models/Zones");
+router.get('/api/zone-exp/:_id', async (req, res) => {
+
+    try {
+        const { _id } = req.params;
+        const renew = req.query.renew === 'true';
+        const lamps = await Lamps.aggregate([
+            {$match:{zone_id: new ObjectId(_id) }},
+            {
+                $lookup:
+                    {
+                        from: "files",
+                        localField: "_id",
+                        foreignField: "lamp_id",
+                        as: "files",
+                    },
+            },
+        ]).exec();
+        const zone = await Zones.findOne({ _id }).select(['name','sequence']).exec();
+        const array = [];
+        let i= 0;
+        for (const lamp of lamps) {
+            const item = {
+                _id: _.result(lamp, '_id', '')??'',
+                name: _.result(lamp, 'name', '')??'',
+                pole_number: _.result(lamp, 'pole_number', '')??'',
+                equipment_number: _.result(lamp, 'equipment_number', '')??'',
+                files_before:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ก่อนติดตั้ง'),'created_at','desc'),
+                files_during:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ระหว่างติดตั้ง'),'created_at','desc'),
+                files_lights_on:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ภาพถ่ายดำเนินการแล้วเสร็จ(ไฟติด)'),'created_at','desc'),
+            };
+            if (item?.files_before[0]?.node_id){
+                await saveFile(item?.files_before[0]?.node_id,renew);
+            }
+            if (item?.files_during[0]?.node_id){
+                await saveFile(item?.files_during[0]?.node_id,renew);
+            }
+            if (item?.files_lights_on[0]?.node_id){
+                await saveFile(item?.files_lights_on[0]?.node_id,renew);
+            }
+            array.push({
+                name:item?.name ?? '',
+                pole_number:item?.pole_number ?? '',
+                equipment_number:item?.equipment_number ?? '',
+                files_before:toBase64(item?.files_before[0]?.node_id ? item?.files_before[0]?.node_id:"")??"",
+                files_during:toBase64(item?.files_during[0]?.node_id ? item?.files_during[0]?.node_id:"")??"",
+                files_lights_on:toBase64(item?.files_lights_on[0]?.node_id ? item?.files_lights_on[0]?.node_id:"")??"",
+            })
+            i++;
+            console.debug(i+"/"+lamps.length);
+        }
+        const data = {
+            ...zone.toObject(),
+            lamps:_.orderBy(array,'equipment_number','asc')
+        };
+        res.json(data);
+    }catch (e) {
+        res.json({success:false,message:e.message});
     }
 
 });

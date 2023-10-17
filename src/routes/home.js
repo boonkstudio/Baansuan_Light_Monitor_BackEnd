@@ -45,7 +45,6 @@ router.get('/api/sync/all', async (req, res) => {
     return zone;
   }));
   for (const zone of createZones) {
-    console.debug(`createZones => `, createZones);
     if (!_.result(zone, 'folder_id')) {
       try {
         const folder = await GoogleController.createFolder(zone.name, process.env.GOOGLE_FOLDER_ROOT_ID);
