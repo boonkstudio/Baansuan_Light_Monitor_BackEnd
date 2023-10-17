@@ -253,7 +253,8 @@ router.get('/api/zone-exp/:_id', async (req, res) => {
                 await saveFile(item?.files_lights_on[0]?.node_id,renew);
             }
             array.push({
-                name:item?.name ?? '',
+                ...zone.toObject(),
+                lamp_name:item?.name ?? '',
                 pole_number:item?.pole_number ?? '',
                 equipment_number:item?.equipment_number ?? '',
                 files_before:item?.files_before[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_before[0]?.node_id+".webp":"",
@@ -263,10 +264,7 @@ router.get('/api/zone-exp/:_id', async (req, res) => {
             i++;
             console.debug(i+"/"+lamps.length);
         }
-        const data = {
-            ...zone.toObject(),
-            lamps:_.orderBy(array,'equipment_number','asc')
-        };
+        const data = _.orderBy(array,'equipment_number','asc');
         res.json(data);
     }catch (e) {
         res.json({success:false,message:e.message});
