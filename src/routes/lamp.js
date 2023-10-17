@@ -79,7 +79,7 @@ const saveFile = async ( node,renew=false) => {
 
         }
         try {
-            fs.unlinkSync(`${dir2}/${fileId}.webp`, (err) => {
+            fs.unlinkSync(`${dir2}/${fileId}.jpeg`, (err) => {
                 if (err) {
                     console.error(err);
                 }
@@ -90,7 +90,7 @@ const saveFile = async ( node,renew=false) => {
     }
 
     await new Promise((resolve, reject) => {
-    fs.readFile(`${dir2}/${fileId}.webp`, async (err, data) => {
+    fs.readFile(`${dir2}/${fileId}.jpeg`, async (err, data) => {
         try {
             if (err) {
                 const resp =  await Drive.files.get({ fileId, alt: 'media' }, { responseType: 'stream',size:1 })
@@ -106,10 +106,10 @@ const saveFile = async ( node,renew=false) => {
                         });
                     });
                     const inputFilePath = imageName;
-                    const outputFilePath = `${dir2}/${fileId}.webp`;
+                    const outputFilePath = `${dir2}/${fileId}.jpeg`;
                     await new Promise((resolve, reject)=>{
-                        sharp(inputFilePath).rotate()
-                            .webp({ quality: 80 })
+                        sharp(inputFilePath).rotate().jpeg({ quality: 80 })
+                            // .jpeg({ quality: 80 })
                             .resize(500)
                             .toFile(outputFilePath, (err, info) => {
                                 if (err) {
@@ -144,7 +144,7 @@ const saveFile = async ( node,renew=false) => {
 function toBase64(filePath='') {
 try {
     if (filePath!==''){
-    const img = fs.readFileSync(`public/documents/resized/${filePath}.webp`);
+    const img = fs.readFileSync(`public/documents/resized/${filePath}.jpeg`);
     if (img){
         const b64 =  new Buffer(img).toString('base64');
         return b64
@@ -257,9 +257,9 @@ router.get('/api/zone-exp/:_id', async (req, res) => {
                 lamp_name:item?.name ?? '',
                 pole_number:item?.pole_number ?? '',
                 equipment_number:item?.equipment_number ?? '',
-                files_before:item?.files_before[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_before[0]?.node_id+".webp":"",
-                files_during:item?.files_during[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_during[0]?.node_id+".webp":"",
-                files_lights_on:item?.files_lights_on[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_lights_on[0]?.node_id+".webp":"",
+                files_before:item?.files_before[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_before[0]?.node_id+".jpeg":"",
+                files_during:item?.files_during[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_during[0]?.node_id+".jpeg":"",
+                files_lights_on:item?.files_lights_on[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_lights_on[0]?.node_id+".jpeg":"",
             })
             i++;
             console.debug(i+"/"+lamps.length);
