@@ -116,4 +116,42 @@ router.get('/api/sync/rename', async (req, res) => {
     ,data });
 });
 
+router.get('/api/sync/lamps-count', async (req, res) => {
+  const sheet = new GoogleSheetController('1KrGMSFsUPFF-xw5BfXyNnS8NydpHLyfKw2TC_C8c950');
+  sheet.setRange('data!A2:E');
+  const data = await sheet.get();
+  for (const item of data) {
+    const lamps =await Lamp.find({zone_id:item[4]}).exec();
+    if (lamps.length>+item[2]){
+      await Promise.all(Array.from({ length: item[2] }).map(async (value, i, array) => {
+        const data = {
+          zone_id: item[4],
+          name: `${item[1]}-${(i + 1).toString().padStart(3, '0')}`,
+          sequence: (i + 1),
+        }
+        const lamps = await Lamp.find({zone_id:item[4],sequence:{"$gt":item[2]}});
+        for (const lamp of lamps){
+          lamp.name = "เกิน - "+lamp.name
+          lamp.save();
+        }
+      }));
+    }else if (+lamps.length<+item[2]){
+      await Promise.all(Array.from({ length: item[2] }).map(async (value, i, array) => {
+        const data = {
+          zone_id: item[4],
+          name: `${item[1]}-${(i + 1).toString().padStart(3, '0')}`,
+          sequence: (i + 1),
+        }
+        await Lamp.findOneAndUpdate(
+            { zone_id: item[4],
+              sequence: (i + 1) },
+            data,
+            { new: true, upsert: true },
+        );
+      }));
+    }
+  }
+  res.json({ success: true,data});
+});
+
 module.exports = router;
