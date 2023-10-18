@@ -213,7 +213,8 @@ router.get('/api/lamp-exp/:_id', async (req, res) => {
 
 const { ObjectId } = require('mongodb');
 const Zones = require("../models/Zones");
-router.get('/api/zone-exp/:_id', async (req, res) => {
+const http = require("http");
+router.get('/api/get-zone-exp/:_id', async (req, res) => {
 
     try {
         const { _id } = req.params;
@@ -241,7 +242,7 @@ router.get('/api/zone-exp/:_id', async (req, res) => {
                 equipment_number: _.result(lamp, 'equipment_number', '')??'',
                 files_before:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ก่อนติดตั้ง'),'created_at','desc'),
                 files_during:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ระหว่างติดตั้ง'),'created_at','desc'),
-                files_lights_on:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ภาพถ่ายดำเนินการแล้วเสร็จ(ไฟติด)'),'created_at','desc'),
+                files_lights_on:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='หลังติดตั้ง'),'created_at','desc'),
             };
             if (item?.files_before[0]?.node_id){
                 await saveFile(item?.files_before[0]?.node_id,renew);
@@ -269,7 +270,94 @@ router.get('/api/zone-exp/:_id', async (req, res) => {
     }catch (e) {
         res.json({success:false,message:e.message});
     }
+});
+router.post('/api/zone-exp', async (req, res) => {
 
+    try {
+        const { _id: id } = req.body;
+        const renew = req.query.renew === 'true';
+        const lamps = await Lamps.aggregate([
+            {$match:{zone_id: new ObjectId(id) }},
+            {
+                $lookup:
+                    {
+                        from: "files",
+                        localField: "_id",
+                        foreignField: "lamp_id",
+                        as: "files",
+                    },
+            },
+        ]).exec();
+        const zone = await Zones.findOne({ _id: id }).select(['name','sequence']).exec();
+        const array = [];
+        let i= 0;
+        for (const lamp of lamps) {
+            const item = {
+                _id: _.result(lamp, '_id', '')??'',
+                name: _.result(lamp, 'name', '')??'',
+                pole_number: _.result(lamp, 'pole_number', '')??'',
+                equipment_number: _.result(lamp, 'equipment_number', '')??'',
+                files_before:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ก่อนติดตั้ง'),'created_at','desc'),
+                files_during:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ระหว่างติดตั้ง'),'created_at','desc'),
+                files_lights_on:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='หลังติดตั้ง'),'created_at','desc'),
+            };
+            if (item?.files_before[0]?.node_id){
+                await saveFile(item?.files_before[0]?.node_id,renew);
+            }
+            if (item?.files_during[0]?.node_id){
+                await saveFile(item?.files_during[0]?.node_id,renew);
+            }
+            if (item?.files_lights_on[0]?.node_id){
+                await saveFile(item?.files_lights_on[0]?.node_id,renew);
+            }
+            array.push({
+                ...zone.toObject(),
+                lamp_name:item?.name ?? '',
+                pole_number:item?.pole_number ?? '',
+                equipment_number:item?.equipment_number ?? '',
+                files_before:item?.files_before[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_before[0]?.node_id+".jpeg":"",
+                files_during:item?.files_during[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_during[0]?.node_id+".jpeg":"",
+                files_lights_on:item?.files_lights_on[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_lights_on[0]?.node_id+".jpeg":"",
+            })
+            i++;
+            console.debug(i+"/"+lamps.length);
+        }
+        const data = _.orderBy(array,'equipment_number','asc');
+        res.json(data);
+    }catch (e) {
+        res.json({success:false,message:e.message});
+    }
+});
+
+router.get('/api/report/zone/:_id', async (req, res) => {
+    const { _id } = req.params;
+    try {
+        const jasperServer = process.env.JASPER_SERVER;
+        const jasperUser = process.env.JASPER_USERNAME;
+        const jasperPassword = process.env.JASPER_PASSWORD;
+        const link = `${jasperServer}/rest_v2/reports/tkc/product/product-standard.pdf?ID=${_id}&viewAsDashboardFrame=true&standAlone=true&j_acegi_security_check&j_username=${jasperUser}&j_password=${jasperPassword}`;
+
+        const fileName = `public/documents/${_id}.pdf`;
+        const file = fs.createWriteStream(fileName);
+        const request = await http.get(link, (response) => {
+            response.pipe(file);
+
+            // after download completed close filestream
+            file.on('finish', () => {
+                file.close();
+                res.download(fileName, (err) => {
+                    if (err) {
+                        // Handle error, but keep in mind the response may be partially-sent
+                        // so check res.headersSent
+                    } else {
+                        fs.unlink(fileName, () => {});
+                    }
+                });
+            });
+        });
+
+        // res.json(product);
+    } catch (e) {}
 });
 
 module.exports = router;
