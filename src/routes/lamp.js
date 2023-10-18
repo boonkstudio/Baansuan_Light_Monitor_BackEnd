@@ -335,8 +335,7 @@ router.get('/api/report/zone/:_id', async (req, res) => {
         const jasperServer = process.env.JASPER_SERVER;
         const jasperUser = process.env.JASPER_USERNAME;
         const jasperPassword = process.env.JASPER_PASSWORD;
-        const link = `${jasperServer}/rest_v2/reports/tkc/product/product-standard.pdf?ID=${_id}&viewAsDashboardFrame=true&standAlone=true&j_acegi_security_check&j_username=${jasperUser}&j_password=${jasperPassword}`;
-
+        const link = `${jasperServer}/rest_v2/reports/tkc/product/product-standard-1.pdf?_id=${_id}&viewAsDashboardFrame=true&standAlone=true&j_acegi_security_check&j_username=${jasperUser}&j_password=${jasperPassword}`;
         const fileName = `public/documents/${_id}.pdf`;
         const file = fs.createWriteStream(fileName);
         const request = await http.get(link, (response) => {
