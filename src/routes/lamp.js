@@ -352,7 +352,7 @@ router.post('/api/zone-exp', async (req, res) => {
                 name: _.result(lamp, 'name', '')??'',
                 pole_number: _.result(lamp, 'pole_number', '')??'',
                 equipment_number: _.result(lamp, 'equipment_number', '')??'',
-                files_before:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ก่อนติดตั้ง'),'created_at','desc'),
+                files_before:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='รูปภาพเลขครุภัณฑ์โคมไฟใหม'),'created_at','desc'),
                 files_during:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ระหว่างติดตั้ง'),'created_at','desc'),
                 files_lights_on:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='หลังติดตั้ง'),'created_at','desc'),
             };
