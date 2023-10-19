@@ -92,46 +92,72 @@ const saveFile = async ( node,renew=false) => {
     await new Promise((resolve, reject) => {
     fs.readFile(`${dir2}/${fileId}.jpeg`, async (err, data) => {
         try {
+            // if (err) {
+            //     const resp =  await Drive.files.get({ fileId, alt: 'media' }, { responseType: 'stream',size:1 })
+            //     if (_.result(resp, 'data', false)) {
+            //         await new Promise((resolve, reject)=>{
+            //             const dest = fs.createWriteStream(imageName);
+            //             resp.data.pipe(dest).on('finish', () => {
+            //                 console.log(`Image downloaded as ${imageName}`);
+            //                 resolve();
+            //             }).on('error', (err) => {
+            //                 console.error(err);
+            //                 resolve();
+            //             });
+            //         });
+            //         const inputFilePath = imageName;
+            //         const outputFilePath = `${dir2}/${fileId}.jpeg`;
+            //         await new Promise((resolve, reject)=>{
+            //             sharp(inputFilePath).rotate().jpeg({ quality: 80 })
+            //                 // .jpeg({ quality: 80 })
+            //                 .resize(500)
+            //                 .toFile(outputFilePath, (err, info) => {
+            //                     if (err) {
+            //                         console.error(err);
+            //                         resolve(err);
+            //                     } else {
+            //                         console.log('Image resized successfully:', info);
+            //                         resolve();
+            //                         try {
+            //                             fs.unlinkSync(imageName, (err) => {
+            //                                 if (err) {
+            //                                     console.error(err);
+            //                                 }
+            //                             });
+            //                         }catch (e) {
+            //
+            //                         }
+            //
+            //                     }
+            //                 });
+            //         });
+            //     }
+            // }
             if (err) {
-                const resp =  await Drive.files.get({ fileId, alt: 'media' }, { responseType: 'stream',size:1 })
-                if (_.result(resp, 'data', false)) {
-                    await new Promise((resolve, reject)=>{
-                        const dest = fs.createWriteStream(imageName);
-                        resp.data.pipe(dest).on('finish', () => {
-                            console.log(`Image downloaded as ${imageName}`);
-                            resolve();
-                        }).on('error', (err) => {
-                            console.error(err);
-                            resolve();
-                        });
+                try {
+                    const response = await Drive.files.get({
+                        fileId: fileId,
+                        fields: 'id, name, webViewLink, webContentLink, permissions, thumbnailLink',
+                        quotaUser: 'test',
                     });
-                    const inputFilePath = imageName;
-                    const outputFilePath = `${dir2}/${fileId}.jpeg`;
-                    await new Promise((resolve, reject)=>{
-                        sharp(inputFilePath).rotate().jpeg({ quality: 80 })
-                            // .jpeg({ quality: 80 })
-                            .resize(500)
-                            .toFile(outputFilePath, (err, info) => {
-                                if (err) {
-                                    console.error(err);
-                                    resolve(err);
-                                } else {
-                                    console.log('Image resized successfully:', info);
-                                    resolve();
-                                    try {
-                                        fs.unlinkSync(imageName, (err) => {
-                                            if (err) {
-                                                console.error(err);
-                                            }
-                                        });
-                                    }catch (e) {
-
-                                    }
-
-                                }
+                    const imageUrl = _.result(response, 'data.thumbnailLink', '').replace('s220', 's500');
+                    const file = fs.createWriteStream(`${dir2}/${fileId}.jpeg`);
+                    https.get(imageUrl, (response) => {
+                        try {
+                            response.pipe(file);
+                            file.on('finish', async () => {
+                                file.close();
                             });
+                        }catch (e) {
+
+                        }
+
+                    }).on('error', (err) => {
                     });
+                }catch (e) {
+
                 }
+
             }
             resolve();
         } catch (e) {
@@ -234,13 +260,44 @@ router.get('/api/get-zone-exp/:_id', async (req, res) => {
         const zone = await Zones.findOne({ _id }).select(['name','sequence']).exec();
         const array = [];
         let i= 0;
-        for (const lamp of lamps) {
+        // for (const lamp of lamps) {
+        //     const item = {
+        //         _id: _.result(lamp, '_id', '')??'',
+        //         name: _.result(lamp, 'name', '')??'',
+        //         pole_number: _.result(lamp, 'pole_number', '')??'',
+        //         equipment_number: _.result(lamp, 'equipment_number', '')??'',
+        //         files_before:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ก่อนติดตั้ง'),'created_at','desc'),
+        //         files_during:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ระหว่างติดตั้ง'),'created_at','desc'),
+        //         files_lights_on:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='หลังติดตั้ง'),'created_at','desc'),
+        //     };
+        //     if (item?.files_before[0]?.node_id){
+        //         await saveFile(item?.files_before[0]?.node_id,renew);
+        //     }
+        //     if (item?.files_during[0]?.node_id){
+        //         await saveFile(item?.files_during[0]?.node_id,renew);
+        //     }
+        //     if (item?.files_lights_on[0]?.node_id){
+        //         await saveFile(item?.files_lights_on[0]?.node_id,renew);
+        //     }
+        //     array.push({
+        //         ...zone.toObject(),
+        //         lamp_name:item?.name ?? '',
+        //         pole_number:item?.pole_number ?? '',
+        //         equipment_number:item?.equipment_number ?? '',
+        //         files_before:item?.files_before[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_before[0]?.node_id+".jpeg":"",
+        //         files_during:item?.files_during[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_during[0]?.node_id+".jpeg":"",
+        //         files_lights_on:item?.files_lights_on[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_lights_on[0]?.node_id+".jpeg":"",
+        //     })
+        //     i++;
+        //     console.debug(i+"/"+lamps.length);
+        // }
+        const array2 = await Promise.all(lamps.map(async (lamp)=>{
             const item = {
                 _id: _.result(lamp, '_id', '')??'',
                 name: _.result(lamp, 'name', '')??'',
                 pole_number: _.result(lamp, 'pole_number', '')??'',
                 equipment_number: _.result(lamp, 'equipment_number', '')??'',
-                files_before:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ก่อนติดตั้ง'),'created_at','desc'),
+                files_before:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='รูปภาพเลขครุภัณฑ์โคมไฟใหม'),'created_at','desc'),
                 files_during:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ระหว่างติดตั้ง'),'created_at','desc'),
                 files_lights_on:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='หลังติดตั้ง'),'created_at','desc'),
             };
@@ -253,7 +310,7 @@ router.get('/api/get-zone-exp/:_id', async (req, res) => {
             if (item?.files_lights_on[0]?.node_id){
                 await saveFile(item?.files_lights_on[0]?.node_id,renew);
             }
-            array.push({
+            return {
                 ...zone.toObject(),
                 lamp_name:item?.name ?? '',
                 pole_number:item?.pole_number ?? '',
@@ -261,11 +318,9 @@ router.get('/api/get-zone-exp/:_id', async (req, res) => {
                 files_before:item?.files_before[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_before[0]?.node_id+".jpeg":"",
                 files_during:item?.files_during[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_during[0]?.node_id+".jpeg":"",
                 files_lights_on:item?.files_lights_on[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_lights_on[0]?.node_id+".jpeg":"",
-            })
-            i++;
-            console.debug(i+"/"+lamps.length);
-        }
-        const data = _.orderBy(array,'equipment_number','asc');
+            }
+        }));
+        const data = _.orderBy(array2,'equipment_number','asc');
         res.json(data);
     }catch (e) {
         res.json({success:false,message:e.message});
