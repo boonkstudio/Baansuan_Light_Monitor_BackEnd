@@ -92,73 +92,73 @@ const saveFile = async ( node,renew=false) => {
     await new Promise((resolve, reject) => {
     fs.readFile(`${dir2}/${fileId}.jpeg`, async (err, data) => {
         try {
-            // if (err) {
-            //     const resp =  await Drive.files.get({ fileId, alt: 'media' }, { responseType: 'stream',size:1 })
-            //     if (_.result(resp, 'data', false)) {
-            //         await new Promise((resolve, reject)=>{
-            //             const dest = fs.createWriteStream(imageName);
-            //             resp.data.pipe(dest).on('finish', () => {
-            //                 console.log(`Image downloaded as ${imageName}`);
-            //                 resolve();
-            //             }).on('error', (err) => {
-            //                 console.error(err);
-            //                 resolve();
-            //             });
-            //         });
-            //         const inputFilePath = imageName;
-            //         const outputFilePath = `${dir2}/${fileId}.jpeg`;
-            //         await new Promise((resolve, reject)=>{
-            //             sharp(inputFilePath).rotate().jpeg({ quality: 80 })
-            //                 // .jpeg({ quality: 80 })
-            //                 .resize(500)
-            //                 .toFile(outputFilePath, (err, info) => {
-            //                     if (err) {
-            //                         console.error(err);
-            //                         resolve(err);
-            //                     } else {
-            //                         console.log('Image resized successfully:', info);
-            //                         resolve();
-            //                         try {
-            //                             fs.unlinkSync(imageName, (err) => {
-            //                                 if (err) {
-            //                                     console.error(err);
-            //                                 }
-            //                             });
-            //                         }catch (e) {
-            //
-            //                         }
-            //
-            //                     }
-            //                 });
-            //         });
-            //     }
-            // }
             if (err) {
-                try {
-                    const response = await Drive.files.get({
-                        fileId: fileId,
-                        fields: 'id, name, webViewLink, webContentLink, permissions, thumbnailLink',
-                        quotaUser: 'test',
+                const resp =  await Drive.files.get({ fileId, alt: 'media' }, { responseType: 'stream',size:1 })
+                if (_.result(resp, 'data', false)) {
+                    await new Promise((resolve, reject)=>{
+                        const dest = fs.createWriteStream(imageName);
+                        resp.data.pipe(dest).on('finish', () => {
+                            console.log(`Image downloaded as ${imageName}`);
+                            resolve();
+                        }).on('error', (err) => {
+                            console.error(err);
+                            resolve();
+                        });
                     });
-                    const imageUrl = _.result(response, 'data.thumbnailLink', '').replace('s220', 's500');
-                    const file = fs.createWriteStream(`${dir2}/${fileId}.jpeg`);
-                    https.get(imageUrl, (response) => {
-                        try {
-                            response.pipe(file);
-                            file.on('finish', async () => {
-                                file.close();
+                    const inputFilePath = imageName;
+                    const outputFilePath = `${dir2}/${fileId}.jpeg`;
+                    await new Promise((resolve, reject)=>{
+                        sharp(inputFilePath).rotate().jpeg({ quality: 80 })
+                            // .jpeg({ quality: 80 })
+                            .resize(500)
+                            .toFile(outputFilePath, (err, info) => {
+                                if (err) {
+                                    console.error(err);
+                                    resolve(err);
+                                } else {
+                                    console.log('Image resized successfully:', info);
+                                    resolve();
+                                    try {
+                                        fs.unlinkSync(imageName, (err) => {
+                                            if (err) {
+                                                console.error(err);
+                                            }
+                                        });
+                                    }catch (e) {
+
+                                    }
+
+                                }
                             });
-                        }catch (e) {
-
-                        }
-
-                    }).on('error', (err) => {
                     });
-                }catch (e) {
-
                 }
-
             }
+            // if (err) {
+            //     try {
+            //         const response = await Drive.files.get({
+            //             fileId: fileId,
+            //             fields: 'id, name, webViewLink, webContentLink, permissions, thumbnailLink',
+            //             quotaUser: 'test',
+            //         });
+            //         const imageUrl = _.result(response, 'data.thumbnailLink', '').replace('s220', 's500');
+            //         const file = fs.createWriteStream(`${dir2}/${fileId}.jpeg`);
+            //         https.get(imageUrl, (response) => {
+            //             try {
+            //                 response.pipe(file);
+            //                 file.on('finish', async () => {
+            //                     file.close();
+            //                 });
+            //             }catch (e) {
+            //
+            //             }
+            //
+            //         }).on('error', (err) => {
+            //         });
+            //     }catch (e) {
+            //
+            //     }
+            //
+            // }
             resolve();
         } catch (e) {
             console.error(e);
