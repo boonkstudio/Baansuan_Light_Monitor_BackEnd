@@ -296,9 +296,9 @@ router.get('/api/get-zone-exp/:_id', async (req, res) => {
                 lamp_name:item?.name ?? '',
                 pole_number:item?.pole_number ?? '',
                 equipment_number:item?.equipment_number ?? '',
-                files_before:item?.before_installing[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.before_installing[0]?.node_id+".jpeg":"",
+                files_before:item?.picture_of_new_lamp_equipment_number[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.picture_of_new_lamp_equipment_number[0]?.node_id+".jpeg":"",
                 files_during:item?.during_installation[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.during_installation[0]?.node_id+".jpeg":"",
-                files_lights_on:item?.picture_of_new_lamp_equipment_number[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.picture_of_new_lamp_equipment_number[0]?.node_id+".jpeg":item?.photos_completed[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.photos_completed[0]?.node_id+".jpeg":"",
+                files_lights_on:item?.before_installing[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.before_installing[0]?.node_id+".jpeg":item?.photos_completed[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.photos_completed[0]?.node_id+".jpeg":"",
             }
         }));
         const data = _.orderBy(array2,'equipment_number','asc');
@@ -361,9 +361,9 @@ router.post('/api/zone-exp', async (req, res) => {
                 lamp_name:item?.name ?? '',
                 pole_number:item?.pole_number ?? '',
                 equipment_number:item?.equipment_number ?? '',
-                files_before:item?.before_installing[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.before_installing[0]?.node_id+".jpeg":"",
+                files_before:item?.picture_of_new_lamp_equipment_number[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.picture_of_new_lamp_equipment_number[0]?.node_id+".jpeg":"",
                 files_during:item?.during_installation[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.during_installation[0]?.node_id+".jpeg":"",
-                files_lights_on:item?.picture_of_new_lamp_equipment_number[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.picture_of_new_lamp_equipment_number[0]?.node_id+".jpeg":item?.photos_completed[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.photos_completed[0]?.node_id+".jpeg":"",
+                files_lights_on:item?.before_installing[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.before_installing[0]?.node_id+".jpeg":item?.photos_completed[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.photos_completed[0]?.node_id+".jpeg":"",
             }
         }));
         const data = _.orderBy(array2,'equipment_number','asc');
