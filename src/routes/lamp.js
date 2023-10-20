@@ -260,70 +260,51 @@ router.get('/api/get-zone-exp/:_id', async (req, res) => {
         const zone = await Zones.findOne({ _id }).select(['name','sequence']).exec();
         const array = [];
         let i= 0;
-        // for (const lamp of lamps) {
-        //     const item = {
-        //         _id: _.result(lamp, '_id', '')??'',
-        //         name: _.result(lamp, 'name', '')??'',
-        //         pole_number: _.result(lamp, 'pole_number', '')??'',
-        //         equipment_number: _.result(lamp, 'equipment_number', '')??'',
-        //         files_before:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ก่อนติดตั้ง'),'created_at','desc'),
-        //         files_during:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ระหว่างติดตั้ง'),'created_at','desc'),
-        //         files_lights_on:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='หลังติดตั้ง'),'created_at','desc'),
-        //     };
-        //     if (item?.files_before[0]?.node_id){
-        //         await saveFile(item?.files_before[0]?.node_id,renew);
-        //     }
-        //     if (item?.files_during[0]?.node_id){
-        //         await saveFile(item?.files_during[0]?.node_id,renew);
-        //     }
-        //     if (item?.files_lights_on[0]?.node_id){
-        //         await saveFile(item?.files_lights_on[0]?.node_id,renew);
-        //     }
-        //     array.push({
-        //         ...zone.toObject(),
-        //         lamp_name:item?.name ?? '',
-        //         pole_number:item?.pole_number ?? '',
-        //         equipment_number:item?.equipment_number ?? '',
-        //         files_before:item?.files_before[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_before[0]?.node_id+".jpeg":"",
-        //         files_during:item?.files_during[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_during[0]?.node_id+".jpeg":"",
-        //         files_lights_on:item?.files_lights_on[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_lights_on[0]?.node_id+".jpeg":"",
-        //     })
-        //     i++;
-        //     console.debug(i+"/"+lamps.length);
-        // }
         const array2 = await Promise.all(lamps.map(async (lamp)=>{
             const item = {
                 _id: _.result(lamp, '_id', '')??'',
                 name: _.result(lamp, 'name', '')??'',
                 pole_number: _.result(lamp, 'pole_number', '')??'',
                 equipment_number: _.result(lamp, 'equipment_number', '')??'',
-                files_before:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='รูปภาพเลขครุภัณฑ์โคมไฟใหม'),'created_at','desc'),
-                files_during:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ระหว่างติดตั้ง'),'created_at','desc'),
-                files_lights_on:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='หลังติดตั้ง'),'created_at','desc'),
+                before_installing:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ก่อนติดตั้ง'),'created_at','desc'),
+                during_installation:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ระหว่างติดตั้ง'),'created_at','desc'),
+                after_installation:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='หลังติดตั้ง'),'created_at','desc'),
+                picture_of_new_lamp_equipment_number:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='รูปภาพเลขครุภัณฑ์โคมไฟใหม'),'created_at','desc'),
+                picture_of_original_lamp_equipment_number:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='รูปภาพเลขครุภัณฑ์โคมไฟเดิม'),'created_at','desc'),
+                photos_completed:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ภาพถ่ายดำเนินการแล้วเสร็จ(ไฟติด)'),'created_at','desc'),
             };
-            if (item?.files_before[0]?.node_id){
-                await saveFile(item?.files_before[0]?.node_id,renew);
+            if (item?.before_installing[0]?.node_id){
+                await saveFile(item?.before_installing[0]?.node_id,renew);
             }
-            if (item?.files_during[0]?.node_id){
-                await saveFile(item?.files_during[0]?.node_id,renew);
+            if (item?.during_installation[0]?.node_id){
+                await saveFile(item?.during_installation[0]?.node_id,renew);
             }
-            if (item?.files_lights_on[0]?.node_id){
-                await saveFile(item?.files_lights_on[0]?.node_id,renew);
+            // if (item?.after_installation[0]?.node_id){
+            //     await saveFile(item?.after_installation[0]?.node_id,renew);
+            // }
+            if (item?.picture_of_new_lamp_equipment_number[0]?.node_id){
+                await saveFile(item?.picture_of_new_lamp_equipment_number[0]?.node_id,renew);
+            }
+            // if (item?.picture_of_original_lamp_equipment_number[0]?.node_id){
+            //     await saveFile(item?.picture_of_original_lamp_equipment_number[0]?.node_id,renew);
+            // }
+            if (item?.photos_completed[0]?.node_id){
+                await saveFile(item?.photos_completed[0]?.node_id,renew);
             }
             return {
                 ...zone.toObject(),
                 lamp_name:item?.name ?? '',
                 pole_number:item?.pole_number ?? '',
                 equipment_number:item?.equipment_number ?? '',
-                files_before:item?.files_before[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_before[0]?.node_id+".jpeg":"",
-                files_during:item?.files_during[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_during[0]?.node_id+".jpeg":"",
-                files_lights_on:item?.files_lights_on[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_lights_on[0]?.node_id+".jpeg":"",
+                files_before:item?.before_installing[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.before_installing[0]?.node_id+".jpeg":"",
+                files_during:item?.during_installation[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.during_installation[0]?.node_id+".jpeg":"",
+                files_lights_on:item?.picture_of_new_lamp_equipment_number[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.picture_of_new_lamp_equipment_number[0]?.node_id+".jpeg":item?.photos_completed[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.photos_completed[0]?.node_id+".jpeg":"",
             }
         }));
         const data = _.orderBy(array2,'equipment_number','asc');
         res.json(data);
     }catch (e) {
-        res.json({success:false,message:e.message});
+        res.status(500).json({success:false,message:e.message});
     }
 });
 router.post('/api/zone-exp', async (req, res) => {
@@ -344,40 +325,48 @@ router.post('/api/zone-exp', async (req, res) => {
             },
         ]).exec();
         const zone = await Zones.findOne({ _id: id }).select(['name','sequence']).exec();
-        const array = [];
-        let i= 0;
-        for (const lamp of lamps) {
+        const array2 = await Promise.all(lamps.map(async (lamp)=>{
             const item = {
                 _id: _.result(lamp, '_id', '')??'',
                 name: _.result(lamp, 'name', '')??'',
                 pole_number: _.result(lamp, 'pole_number', '')??'',
                 equipment_number: _.result(lamp, 'equipment_number', '')??'',
-                files_before:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='รูปภาพเลขครุภัณฑ์โคมไฟใหม'),'created_at','desc'),
-                files_during:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ระหว่างติดตั้ง'),'created_at','desc'),
-                files_lights_on:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='หลังติดตั้ง'),'created_at','desc'),
+                before_installing:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ก่อนติดตั้ง'),'created_at','desc'),
+                during_installation:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ระหว่างติดตั้ง'),'created_at','desc'),
+                after_installation:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='หลังติดตั้ง'),'created_at','desc'),
+                picture_of_new_lamp_equipment_number:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='รูปภาพเลขครุภัณฑ์โคมไฟใหม'),'created_at','desc'),
+                picture_of_original_lamp_equipment_number:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='รูปภาพเลขครุภัณฑ์โคมไฟเดิม'),'created_at','desc'),
+                photos_completed:_.orderBy((_.result(lamp,'files',[])??[]).filter((item)=>item.type==='ภาพถ่ายดำเนินการแล้วเสร็จ(ไฟติด)'),'created_at','desc'),
             };
-            if (item?.files_before[0]?.node_id){
-                await saveFile(item?.files_before[0]?.node_id,renew);
+            if (item?.before_installing[0]?.node_id){
+                await saveFile(item?.before_installing[0]?.node_id,renew);
             }
-            if (item?.files_during[0]?.node_id){
-                await saveFile(item?.files_during[0]?.node_id,renew);
+            if (item?.during_installation[0]?.node_id){
+                await saveFile(item?.during_installation[0]?.node_id,renew);
             }
-            if (item?.files_lights_on[0]?.node_id){
-                await saveFile(item?.files_lights_on[0]?.node_id,renew);
+            // if (item?.after_installation[0]?.node_id){
+            //     await saveFile(item?.after_installation[0]?.node_id,renew);
+            // }
+            if (item?.picture_of_new_lamp_equipment_number[0]?.node_id){
+                await saveFile(item?.picture_of_new_lamp_equipment_number[0]?.node_id,renew);
             }
-            array.push({
+            // if (item?.picture_of_original_lamp_equipment_number[0]?.node_id){
+            //     await saveFile(item?.picture_of_original_lamp_equipment_number[0]?.node_id,renew);
+            // }
+            if (item?.photos_completed[0]?.node_id){
+                await saveFile(item?.photos_completed[0]?.node_id,renew);
+            }
+            return {
                 ...zone.toObject(),
                 lamp_name:item?.name ?? '',
                 pole_number:item?.pole_number ?? '',
                 equipment_number:item?.equipment_number ?? '',
-                files_before:item?.files_before[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_before[0]?.node_id+".jpeg":"",
-                files_during:item?.files_during[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_during[0]?.node_id+".jpeg":"",
-                files_lights_on:item?.files_lights_on[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.files_lights_on[0]?.node_id+".jpeg":"",
-            })
-            i++;
-            console.debug(i+"/"+lamps.length);
-        }
-        const data = _.orderBy(array,'equipment_number','asc');
+                files_before:item?.before_installing[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.before_installing[0]?.node_id+".jpeg":"",
+                files_during:item?.during_installation[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.during_installation[0]?.node_id+".jpeg":"",
+                files_lights_on:item?.picture_of_new_lamp_equipment_number[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.picture_of_new_lamp_equipment_number[0]?.node_id+".jpeg":item?.photos_completed[0]?.node_id ? "https://bansuan-api.ledonhome.co.th/documents/resized/"+item?.photos_completed[0]?.node_id+".jpeg":"",
+            }
+        }));
+        const data = _.orderBy(array2,'equipment_number','asc');
         res.json(data);
     }catch (e) {
         res.json({success:false,message:e.message});
